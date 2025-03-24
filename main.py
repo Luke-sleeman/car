@@ -494,6 +494,8 @@ while running:
         player=Player()
         all_sprites.add(player)
 
+        delay = 2000
+
     # keep loop running at the right speed
     clock.tick(FPS)
 
@@ -506,6 +508,7 @@ while running:
     if new_level:
         level_screen()
         ship.level+=1
+        delay = delay - 250
         new_level = False
 
     # if ship.score==30:
