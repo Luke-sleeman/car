@@ -72,6 +72,55 @@ def newmob3():
 #     mobs.add(car4)
 #     all_sprites.add(car4)
 
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self,center,size):
+        pygame.sprite.Sprite.__init__(self)
+        self.size=size
+        self.width = 100
+        self.height = 100
+        self.expl_anim={}
+        self.expl_anim['sm']=[]
+        self.expl_anim['lg'] = []
+        self.load_image()
+        self.image=self.expl_anim[self.size][0]
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.frame=0
+        self.frame_rate =75
+        self.last_update=pygame.time.get_ticks()
+
+    def update(self):
+        now=pygame.time.get_ticks()
+        if now - self.last_update > self.frame_rate:
+            self.last_update = now
+            self.frame += 1
+            if self.frame == len(self.expl_anim[self.size]):
+                self.kill()
+            else:
+                center = self.rect.center
+                self.image = self.expl_anim[self.size][self.frame]
+                self.rect = self.image.get_rect()
+                self.rect.center = center
+
+    def load_image(self):
+        for i in range(1,9):
+            filename='explosion/regularExplosion0{}.png'.format(i)
+            img =pygame.image.load(filename)
+            img_lg=pygame.transform.scale(img,(150,150))
+            self.expl_anim['lg'].append(img_lg)
+            img_sm = pygame.transform.scale(img, (70, 70))
+            self.expl_anim['sm'].append(img_sm)
+
+            # hits = pygame.sprite.spritecollide(player, MOB, True)
+            # if hits:
+            #     expl = Explosion(player.rect.midtop, "sm")
+            #     all_sprites.add(expl)
+
+
+
+
+
+
 class MOB(pygame.sprite.Sprite):
     def __init__(self,lane):
         pygame.sprite.Sprite.__init__(self)
@@ -79,25 +128,24 @@ class MOB(pygame.sprite.Sprite):
         self.height = 60
         self.car_list=[]
         self.cop_list=[]
+        self.type = random.choice(["cop","car"])
         self.load_images()
         self.lane = lane
+        self.cop_car = False
         self.pick_car=random.randrange(1,21)
+        self.image = pygame.Surface((self.width, self.height))
         if self.pick_car%4==0:
-            self.pick_image=random.choice(self.cop_list)
-        if self.pick_car%4!=0:
-            self.pick_image = random.choice(self.car_list)
-
-
-
-
-        self.image = self.pick_image
+            # self.pick_image=self.cop_list
+            self.cop_car=True
+        else:
+            self.image = random.choice(self.car_list)
 
         #self.image = pygame.image.load("cars_img/car 1.png")
-        self.image = pygame.transform.scale(self.image, (self.width, self.height))
-        self.image = pygame.transform.rotate(self.image, 180)
+        # self.image = pygame.transform.scale(self.image, (self.width, self.height))
+        # self.image = pygame.transform.rotate(self.image, 180)
         self.image = pygame.transform.flip(self.image, False, True)
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
-        self.image=pygame.transform.rotate(self.image,90)
+        self.image=pygame.transform.rotate(self.image,270)
         self.rect = self.image.get_rect()
 
         x1 = WIDTH // 4  - 10
@@ -132,79 +180,54 @@ class MOB(pygame.sprite.Sprite):
             filename = 'cars_img/cop{}.png'.format(i)
             img = pygame.image.load(filename)
             self.cop_list.append(img)
-
-
     def animate(self):
         now = pygame.time.get_ticks()
         if now - self.last_update > 80:
             self.last_update = now
             self.current_frame = (self.current_frame + 1) % len(self.cop_list)
             self.image = self.cop_list[self.current_frame]
-           # self.pick_car = random.randrange(1, 21)
-           # if self.pick_car % 4 == 0:
-               # self.pick_image = self.cop_list[self.current_frame]
-            #if self.pick_car % 4 != 0:
-               # self.pick_image = random.choice(self.car_list)
-
-            self.image = self.pick_image
+            self.image = pygame.transform.flip(self.image,False,True)
     def update(self):
-        #self.animate()
+        if self.cop_car == True:
+            self.animate()
         if self.rect.top >= HEIGHT:
             ship.car_pass+=1
             self.kill()
 
         self.rect.y+=self.speedy
-
 class Power(pygame.sprite.Sprite):
     def __init__(self,x):
         pygame.sprite.Sprite.__init__(self)
         self.width = 50
         self.height = 60
         self.type=random.choice(['health','speed_up'])
-        self.image= pygame.image.load ("shield_bronze.png")
+        self.image= pygame.image.load ("gas_can.png")
         if self.type== 'speed_up':
             self.image = pygame.image.load("bolt_gold.png")
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
         self.rect = self.image.get_rect()
         self.rect.centerx = x
-        self.speedy = 5
+        self.speedy = 10
     def update(self):
         self.rect.y+=self.speedy
         if self.rect.top>HEIGHT:
             self.kill()
 
+
+
+
 #MOB
-class Bullet(pygame.sprite.Sprite):
-    def __init__(self,x,y):
-        pygame.sprite.Sprite.__init__(self)
-        self.width = 10
-        self.height = 20
-        #self.image = pygame.Surface((self.width,self.height))
-        #self.image.fill(ORANGE)
-        self.image = pygame.image.load("laserBlue03.png")
-        self.image = pygame.transform.scale(self.image, (self.width, self.height))
-        self.rect = self.image.get_rect()
-        self.rect.centerx = x
-        self.rect.bottom= y
-        #self.rect.bottom = -100
-        self.speedx = 0
-        self.speedy = 10
-    def update(self):
-        #if self.rect.top >= HEIGHT:
-       #  self.rect.x = random.randrange(0, WIDTH - self.width)
-       #  self.rect.centery = random.randrange(-200, -100)
-       #  self.speedy = random.randrange(5, 20)
-        self.rect.y-=self.speedy
+
 
  #PLAYER
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.width = 70
-        self.height = 120
+        self.width = 65
+        self.height = 110
         #self.image = pygame.Surface((self.width,self.height))
         #self.image.fill(GREEN)
-        self.image = pygame.image.load("truck.png")
+        self.image = pygame.image.load("cars_img/car 8.png")
         self.image.set_colorkey(WHITE)
         self.image = pygame.transform.rotate(self.image, 90)
         self.image = pygame.transform.scale(self.image,(self.width,self.height))
@@ -218,10 +241,12 @@ class Player(pygame.sprite.Sprite):
         self.car_pass=0
         self.lives = 3
         self.health = 100
+        self.level_score = 0
         self.spawn =True
         self.power = 1
         self.power_time = pygame.time.get_ticks()
         self.start = False
+        self.level = 1
     def powerup(self):
         self.power+=1
         self.power_time= pygame.get_ticks()
@@ -244,17 +269,28 @@ class Player(pygame.sprite.Sprite):
             for l in lanes:
                 l.speedy = 3
                 self.start = True
-        if self.start == True:
-            self.score = pygame.time.get_ticks()//1000
+
         if self.rect.right >= WIDTH:
             self.rect.right = WIDTH
         if self.rect.left <= 0:
             self.rect.left = 0
         if self.rect.right>=WIDTH-60:
-            self.health-=0.3
+            self.health-=0.5
         if self.rect.left<=60:
-            self.health-=0.3
+            self.health-=0.5
         self.rect.x += self.speedx
+
+
+
+
+        if self.rect.centerx <=300  :
+            self.health -= .1
+        if self.rect.centerx >= 310:
+            self.health -= .1
+
+        #if self.rect.left <= 125:
+        #    self.health -= 0.3
+        #self.rect.x += self.speedx
 # class Mark(pygame.sprite.Sprite):
 #     def __init__(self):
 #         pygame.sprite.Sprite.__init__(self)
@@ -278,11 +314,14 @@ class Lane(pygame.sprite.Sprite):
         self.rect.x = WIDTH//4+30
         #self.rect.bottom=40
         self.rect.centery=-200
+
         self.speedy = 0
     def update(self):
         self.rect.y += self.speedy
         if self.rect.top > HEIGHT:
             self.rect.centery = -150
+            ship.score+=1
+            ship.level_score+=1
 
 class Lane2(pygame.sprite.Sprite):
     def __init__(self):
@@ -339,11 +378,14 @@ class MOB3(pygame.sprite.Sprite):
         self.rect.y+=self.speedy
 
 
+
+
 def start_screen():
     screen.blit(background_img, background_rect)
-    draw_text(screen, "Near Miss", 64, WIDTH // 2, HEIGHT//4, WHITE)
-    draw_text(screen, "Use arrow keys to move", 32, WIDTH//2 , 2, WHITE)
-    draw_text(screen, "Press A to begin", 32, WIDTH // 2, 3*HEIGHT//4 , WHITE)
+    draw_text(screen, "Near Miss", 64, WIDTH // 2, HEIGHT//4, BLACK)
+    draw_text(screen, "Use arrow keys to move", 32, WIDTH//2 , 2, BLACK)
+    draw_text(screen, "Press A to begin", 32, WIDTH // 2, 3*HEIGHT//4 , BLACK)
+    draw_text(screen, "Press up arrow to begin moving", 32, WIDTH // 2, 2 * HEIGHT // 4, BLACK)
     pygame.display.flip()
     waiting=True
     while waiting:
@@ -356,6 +398,24 @@ def start_screen():
             if event.type==pygame.KEYDOWN:
                 if keystate[pygame.K_a]:
                     waiting=False
+
+
+def level_screen():
+    screen.blit(background_img, background_rect)
+    draw_text(screen, "Level "+str(ship.level)+" Complete!", 64, WIDTH // 2, HEIGHT // 4, BLACK)
+    draw_text(screen, "Press A to continue", 32, WIDTH // 2, 3 * HEIGHT // 4, BLACK)
+    pygame.display.flip()
+    waiting = True
+    while waiting:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            keystate = pygame.key.get_pressed()
+            if event.type == pygame.QUIT:
+                # running=False
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if keystate[pygame.K_a]:
+                    waiting = False
 # initialize pygame and create window
 pygame.init()
 #pygame.mixer.init()
@@ -368,9 +428,11 @@ all_sprites = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 powers = pygame.sprite.Group()
+
 lanes = pygame.sprite.Group()
 lane = Lane()
 l = Lane()
+new_level=False
 lane2=Lane2()
 l2=Lane2()
 ship = Player()
@@ -386,8 +448,8 @@ for i in range((HEIGHT+180)//90):
     l2.rect.bottom = HEIGHT  - i * 90
     # l.image.fill(RED)
 
-# for i in range(8):
-#    newmob()
+#for i in range(8):
+   # newmob()
 
 #for i in range(3):
    # newmob3()
@@ -419,8 +481,7 @@ player_mini_img = pygame.transform.rotate(player_mini_img, 90)
 last_shot=pygame.time.get_ticks()
 shoot_delay=1500
 running = True
-new_game=False
-start_screen()
+new_game=True
 delay_spawn=pygame.time.get_ticks()
 last_spawn=pygame.time.get_ticks()
 delay =2000
@@ -428,6 +489,7 @@ running=True
 new_game=True
 while running:
     if new_game:
+        start_screen()
         new_game=False
         player=Player()
         all_sprites.add(player)
@@ -440,6 +502,18 @@ while running:
         # check for closing window
         if event.type == pygame.QUIT:
             running = False
+
+    if new_level:
+        level_screen()
+        ship.level+=1
+        new_level = False
+
+    # if ship.score==30:
+    #     new_level=True
+    if ship.level_score == 30:
+        new_level = True
+        ship.level_score = 0
+
 
 
         # all_sprites.add(line)
@@ -462,14 +536,7 @@ while running:
         all_sprites.add(pow)
         powers.add(pow)
         ship.car_pass=0
-    hit_mobs = pygame.sprite.groupcollide(mobs,bullets,  True,True)
-    if hit_mobs:
-        for hit in hit_mobs:
-            if random.random()>.1:
-                pow= Power(hit.rect.center)
-                all_sprites.add(pow)
-                powers.add(pow)
-        newmob()
+
         #ADD score to player
         # ship.score += 10
     hit_power=pygame.sprite.spritecollide(ship,powers,True)
@@ -487,10 +554,13 @@ while running:
             for l in lanes:
                 l.speedy*=2
     hit_player = pygame.sprite.spritecollide(ship,mobs,True)
-    if hit_player:
+    for hit in hit_player:
+
         #Damage to player(ship)
         ship.health-= 25
         newmob()
+        expl = Explosion(hit.rect.center, "sm")
+        all_sprites.add(expl)
     if ship.health <=0:
         ship.health =100
         ship.lives -= 1
@@ -505,7 +575,7 @@ while running:
     all_sprites.draw(screen)
     draw_text(screen,str(ship.score),32,WIDTH//2,10,BLACK)
     draw_text(screen, "Lives:",32, 3*WIDTH // 4, 10, BLACK)
-    draw_text(screen, "Health:",32, WIDTH // 6-50, 10, BLACK)
+    draw_text(screen, "Gas:",32, WIDTH // 6-36, 5, BLACK)
 
     draw_shield_bar(screen, WIDTH // 6 , 20, ship.health)
     draw_lives(screen, WIDTH - 100, 13, ship.lives, player_mini_img)
